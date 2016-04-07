@@ -45,7 +45,7 @@ class MigrateCommand extends Command
             throw new RuntimeException("Missing environment variable DATABASE_URL in format mysql://user:password@host/database");
         }
 
-        $connection = DriverManager::getConnection(array('url' => $_SERVER['DATABASE_URL']));
+        $connection = DriverManager::getConnection(array('url' => $dsn));
         $migrator = new DBDeploy($connection, $directory);
 
         $output->writeln(sprintf("Reading change scripts from directory %s... \n", $directory));
