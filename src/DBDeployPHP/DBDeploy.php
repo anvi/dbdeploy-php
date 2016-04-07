@@ -103,7 +103,33 @@ class DBDeploy
     public function apply(MigrationStatus $status)
     {
         foreach ($status->getApplyMigrations() as $revision => $data) {
-            $this->connection->exec($data['sql']);
+            // build query list base on delimiter
+            $delimiter = ';';
+            $sql = '';
+            $dataSql = file_get_contents($data['file']);
+            foreach (explode(PHP_EOL, $dataSql) as $line) {
+                if (preg_match('!^\s*--//@UNDO\s*$!i', $line)) {
+                    break;
+                }
+                $line = preg_replace('/--.*$/', '', $line);
+                if (preg_match('/delimiter\s+(.*)$/i', trim($line), $matches)) {
+                    $delimiter = $matches[1];
+                    continue;
+                }
+                if (strpos($line, $delimiter) !== false) {
+                    $parts = explode($delimiter, $line);
+                    $sql .= PHP_EOL . $parts[0];
+                    if (trim($sql)) {
+                        $this->connection->exec($sql);
+                    }
+                    $sql = isset($parts[1]) ? $parts[1] : '';
+                } else {
+                    $sql .= PHP_EOL . trim($line);
+                }
+            }
+            if (trim($sql)) {
+                $this->connection->exec($sql);
+            }
             $this->connection->insert(
                 'changelog',
                 array(
@@ -122,7 +148,7 @@ class DBDeploy
 
         foreach ($files as $file) {
             $basefile = basename($file);
-            $sql = file_get_contents($file);
+            //$sql = file_get_contents($file);
 
             $revision = $this->getRevision($basefile);
 
@@ -130,13 +156,15 @@ class DBDeploy
                 throw new \RuntimeException(sprintf("Duplicate revision number '%d' is not allowed.", $revision));
             }
 
+            /*
             if (strpos($sql, '--//@UNDO') !== false) {
                 throw new \RuntimeException('No support for DBDeploy "--//@UNDO" feature.');
             }
+            */
 
             $migrations[$revision] = array(
                 'change_number' => $revision,
-                'sql' => $sql,
+                //'sql' => $sql,
                 'file' => $file,
                 'description' => $basefile,
                 'applied_by' => $this->connection->getUsername(),
