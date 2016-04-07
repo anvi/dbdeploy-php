@@ -29,6 +29,6 @@ if (!$loader) {
     throw new RuntimeException('vendor/autoload.php could not be found.');
 }
 
-$application = new Application();
+$application = new Application('DbDeployPhp', '@package_version@');
 $application->add(new Command\MigrateCommand());
 $application->run();
