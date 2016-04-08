@@ -41,7 +41,17 @@ $appliedMigrations = $dbDeploy->migrate();
 
 You need environment variable `DATABASE_URL` present with the format: `mysql://user:password@host/dbname`:
 
-    $ php vendor/bin/dbdeploy-migrate.php src/schema
+    $ php vendor/bin/dbdeploy.php migrate src/schema
+    
+Or you can use -d option to specify the database URL :
+
+    $ php vendor/bin/dbdeploy.php migrate -d mysql://user:password@host/dbname schema_path_
+
+## using phar
+
+dbdeploy can be packaged as a phar using [box2](http://box-project.github.io/box2/), just use this command:
+
+    $ box build
 
 ## Limitations
 
